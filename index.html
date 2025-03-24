@@ -3,426 +3,538 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Number Generator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <title>Analisis Pola Angka</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         :root {
-            --primary: #3498db;
-            --secondary: #2c3e50;
-            --accent: #e74c3c;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
         }
         
         body {
-            background-color: var(--light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
             color: var(--dark);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
         
-        .container {
-            width: 100%;
-            max-width: 800px;
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card {
+            border-radius: 1rem;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: rgba(67, 97, 238, 0.05);
+            border-bottom: none;
+            font-weight: 600;
+            border-radius: 1rem 1rem 0 0 !important;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+        }
+        
+        .number-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 1.5rem 0;
+        }
+        
+        .number-btn {
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
             background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .number-btn:hover {
+            background-color: var(--accent);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .input-display {
+            padding: 1rem;
+            font-size: 1.5rem;
             text-align: center;
+            background-color: white;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
-        h1 {
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-size: 2rem;
-        }
-        
-        .description {
-            color: #555;
-            margin-bottom: 30px;
-        }
-        
-        .number-container {
+        .combination-item {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            font-weight: 500;
             display: flex;
             justify-content: space-between;
-            margin: 30px 0;
-            position: relative;
-            height: 150px;
-            background-color: var(--light);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        
-        .number-cell {
-            flex: 1;
-            display: flex;
             align-items: center;
-            justify-content: center;
-            border-right: 1px solid #ddd;
-            position: relative;
-            overflow: hidden;
         }
         
-        .number-cell:last-child {
-            border-right: none;
-        }
-        
-        .number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--secondary);
-            z-index: 2;
-        }
-        
-        .dot {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background-color: var(--accent);
-            border-radius: 50%;
-            top: -20px;
-            z-index: 1;
-            opacity: 0;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        button {
+        .freq-indicator {
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
             background-color: var(--primary);
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.85rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .action-buttons {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        button:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
-        .settings {
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .setting-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .setting-label {
-            font-weight: 500;
-            color: var(--secondary);
-        }
-        
-        .range-container {
-            flex: 1;
-            margin-left: 20px;
-            display: flex;
-            align-items: center;
             gap: 10px;
+            margin-top: 1rem;
         }
         
-        input[type="range"] {
-            flex: 1;
-            height: 5px;
-            border-radius: 5px;
-            background: #ddd;
-            outline: none;
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
         }
         
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: var(--primary);
-            cursor: pointer;
-        }
-        
-        .value-display {
-            min-width: 40px;
-            text-align: right;
-            font-weight: 500;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            color: #777;
-            font-size: 0.9rem;
-        }
-        
-        /* Responsive styles */
         @media (max-width: 768px) {
-            .number-container {
-                height: 100px;
-            }
-            
-            .number {
-                font-size: 1.8rem;
-            }
-            
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            button {
-                width: 100%;
+            .number-pad {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Generator Angka Acak</h1>
-        <p class="description">Angka Random dari 1 sampai 9</p>
-        
-        <div class="number-container" id="numberContainer">
-            <div class="number-cell">
-                <span class="number" id="num1">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num2">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num3">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num4">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num5">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num6">-</span>
-            </div>
-            <div class="number-cell">
-                <span class="number" id="num7">-</span>
-            </div>
-        </div>
-        
-        <div class="controls">
-            <button id="generateBtn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23 4 23 10 17 10"></polyline>
-                    <polyline points="1 20 1 14 7 14"></polyline>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-                Acak Angka
-            </button>
-            <button id="clearBtn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 6h18"></path>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Reset
-            </button>
-        </div>
-        
-        <div class="settings">
-            <div class="setting-row">
-                <span class="setting-label">Kecepatan Animasi:</span>
-                <div class="range-container">
-                    <input type="range" id="speedRange" min="0.5" max="3" step="0.1" value="1">
-                    <span class="value-display" id="speedValue">1x</span>
-                </div>
-            </div>
-            <div class="setting-row">
-                <span class="setting-label">Jumlah Dot:</span>
-                <div class="range-container">
-                    <input type="range" id="dotsRange" min="3" max="20" step="1" value="8">
-                    <span class="value-display" id="dotsValue">8</span>
-                </div>
-            </div>
-        </div>
-        
-        <p class="footer">© 2025 Random Number Generator</p>
+    <div class="header text-center">
+        <h1>Analisis Pola Angka</h1>
+        <p class="mb-0">Menemukan pola dan frekuensi dari kombinasi angka</p>
     </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header">
+                        Input Angka
+                    </div>
+                    <div class="card-body">
+                        <div class="input-display" id="inputDisplay">0000</div>
+                        
+                        <div class="number-pad">
+                            <button class="number-btn" data-num="1">1</button>
+                            <button class="number-btn" data-num="2">2</button>
+                            <button class="number-btn" data-num="3">3</button>
+                            <button class="number-btn" data-num="4">4</button>
+                            <button class="number-btn" data-num="5">5</button>
+                            <button class="number-btn" data-num="6">6</button>
+                            <button class="number-btn" data-num="7">7</button>
+                            <button class="number-btn" data-num="8">8</button>
+                            <button class="number-btn" data-num="9">9</button>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-warning" id="clearBtn">Hapus</button>
+                            <button class="btn btn-primary" id="submitBtn">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        Riwayat Input
+                    </div>
+                    <div class="card-body">
+                        <div class="history-list" id="historyList">
+                            <!-- Riwayat input akan ditampilkan di sini -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        Distribusi Angka
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="digitChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                Kombinasi 2 Digit
+                            </div>
+                            <div class="card-body">
+                                <div id="combi2List">
+                                    <!-- Kombinasi 2 digit akan ditampilkan di sini -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                Kombinasi 4 Digit
+                            </div>
+                            <div class="card-body">
+                                <div id="combi4List">
+                                    <!-- Kombinasi 4 digit akan ditampilkan di sini -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                Kombinasi 6 Digit
+                            </div>
+                            <div class="card-body">
+                                <div id="combi6List">
+                                    <!-- Kombinasi 6 digit akan ditampilkan di sini -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        Prediksi Kombinasi
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <h5>2 Digit</h5>
+                                    <div class="input-display" id="prediction2">--</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <h5>4 Digit</h5>
+                                    <div class="input-display" id="prediction4">----</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <h5>6 Digit</h5>
+                                    <div class="input-display" id="prediction6">------</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary w-100" id="generateBtn">Generate Prediksi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const numberContainer = document.getElementById('numberContainer');
-            const generateBtn = document.getElementById('generateBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const speedRange = document.getElementById('speedRange');
-            const speedValue = document.getElementById('speedValue');
-            const dotsRange = document.getElementById('dotsRange');
-            const dotsValue = document.getElementById('dotsValue');
-            const cells = document.querySelectorAll('.number-cell');
-            const numElements = Array.from({ length: 7 }, (_, i) => document.getElementById(`num${i+1}`));
+            // Data dan variabel utama
+            let inputSequence = '';
+            let allInputs = [];
+            let digitStats = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0};
+            let combi2Stats = {};
+            let combi4Stats = {};
+            let combi6Stats = {};
             
-            let isAnimating = false;
-            let animationSpeed = parseFloat(speedRange.value);
-            let dotsCount = parseInt(dotsRange.value);
+            // Element references
+            const inputDisplay = document.getElementById('inputDisplay');
+            const historyList = document.getElementById('historyList');
+            const combi2List = document.getElementById('combi2List');
+            const combi4List = document.getElementById('combi4List');
+            const combi6List = document.getElementById('combi6List');
+            const prediction2 = document.getElementById('prediction2');
+            const prediction4 = document.getElementById('prediction4');
+            const prediction6 = document.getElementById('prediction6');
             
-            // Update displayed values
-            speedRange.addEventListener('input', function() {
-                animationSpeed = parseFloat(this.value);
-                speedValue.textContent = animationSpeed.toFixed(1) + 'x';
-            });
-            
-            dotsRange.addEventListener('input', function() {
-                dotsCount = parseInt(this.value);
-                dotsValue.textContent = dotsCount;
-            });
-            
-            // Generate random number between min and max (inclusive)
-            function getRandomNumber(min, max) {
-                return Math.floor(Math.random() * (max - min + 1)) + min;
-            }
-            
-            // Clear all numbers
-            function clearNumbers() {
-                numElements.forEach(el => {
-                    el.textContent = '-';
-                    gsap.to(el, { opacity: 1, scale: 1, duration: 0.3 });
-                });
-            }
-            
-            // Create a dot element for the pachinko animation
-            function createDot(cellIndex) {
-                const dot = document.createElement('div');
-                dot.className = 'dot';
-                
-                // Random horizontal position within the cell
-                const cell = cells[cellIndex];
-                const xPos = Math.random() * 80 + 10; // 10% to 90% of the cell width
-                
-                dot.style.left = `${xPos}%`;
-                cell.appendChild(dot);
-                
-                return dot;
-            }
-            
-            // Animate a single dot with pachinko effect
-            function animateDot(cellIndex, callback) {
-                const dot = createDot(cellIndex);
-                const cell = cells[cellIndex];
-                const cellHeight = cell.offsetHeight;
-                
-                // Create a timeline for more complex animation
-                const tl = gsap.timeline({
-                    onComplete: () => {
-                        dot.remove();
-                        if (callback) callback();
-                    }
-                });
-                
-                // Random bouncing path
-                const control1 = { x: Math.random() * 30 - 15, y: cellHeight * 0.3 };
-                const control2 = { x: Math.random() * 30 - 15, y: cellHeight * 0.6 };
-                const end = { x: Math.random() * 20 - 10, y: cellHeight };
-                
-                // Add animation segments
-                tl.to(dot, { opacity: 1, duration: 0.1 })
-                  .to(dot, {
-                      motionPath: {
-                          path: [
-                              { x: 0, y: 0 },
-                              { x: control1.x, y: control1.y },
-                              { x: control2.x, y: control2.y },
-                              { x: end.x, y: end.y }
-                          ],
-                          curviness: 1.5
-                      },
-                      duration: 1 / animationSpeed,
-                      ease: "power1.inOut"
-                  })
-                  .to(dot, { opacity: 0, duration: 0.2 }, "-=0.2");
-                
-                return tl;
-            }
-            
-            // Generate all numbers with animation
-            function generateNumbers() {
-                if (isAnimating) return;
-                isAnimating = true;
-                
-                // Disable button during animation
-                generateBtn.disabled = true;
-                
-                // Clear previous numbers with fade out effect
-                numElements.forEach(el => {
-                    gsap.to(el, { opacity: 0, scale: 0.8, duration: 0.3 });
-                });
-                
-                // Create a master timeline
-                const masterTimeline = gsap.timeline({
-                    onComplete: () => {
-                        isAnimating = false;
-                        generateBtn.disabled = false;
-                    }
-                });
-                
-                // Generate random numbers for each cell
-                const newNumbers = Array.from({ length: 7 }, () => getRandomNumber(1, 9));
-                
-                // Animate each cell with multiple dots
-                cells.forEach((cell, index) => {
-                    // Staggered start for each cell
-                    const startDelay = index * 0.1;
-                    
-                    // Add cell animation to master timeline
-                    masterTimeline.add(() => {
-                        const cellTimeline = gsap.timeline();
-                        
-                        // Add multiple dots per cell with staggered timing
-                        for (let i = 0; i < dotsCount; i++) {
-                            const dotDelay = i * (0.6 / dotsCount);
-                            cellTimeline.add(animateDot(index), dotDelay);
+            // Chart initialization
+            const ctx = document.getElementById('digitChart').getContext('2d');
+            const digitChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
+                    datasets: [{
+                        label: 'Frekuensi Angka',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)',
+                            'rgba(67, 97, 238, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)',
+                            'rgba(67, 97, 238, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
                         }
-                        
-                        // Reveal the number at the end
-                        cellTimeline.add(() => {
-                            numElements[index].textContent = newNumbers[index];
-                            gsap.fromTo(numElements[index], 
-                                { opacity: 0, scale: 1.5 },
-                                { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.7)" }
-                            );
-                        }, 0.6 / animationSpeed);
-                        
-                        return cellTimeline;
-                    }, startDelay);
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Event listener untuk tombol angka
+            document.querySelectorAll('.number-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (inputSequence.length < 4) {
+                        const num = this.getAttribute('data-num');
+                        inputSequence += num;
+                        updateInputDisplay();
+                    }
                 });
-                
-                return masterTimeline;
+            });
+
+            // Event listener untuk tombol hapus
+            document.getElementById('clearBtn').addEventListener('click', function() {
+                inputSequence = '';
+                updateInputDisplay();
+            });
+
+            // Event listener untuk tombol simpan
+            document.getElementById('submitBtn').addEventListener('click', function() {
+                if (inputSequence.length === 4) {
+                    saveInput();
+                } else {
+                    alert('Silakan masukkan 4 digit angka!');
+                }
+            });
+
+            // Event listener untuk tombol generate prediksi
+            document.getElementById('generateBtn').addEventListener('click', function() {
+                generatePredictions();
+            });
+
+            // Function untuk update tampilan input
+            function updateInputDisplay() {
+                inputDisplay.textContent = inputSequence.padEnd(4, '0');
             }
-            
-            // Event listeners
-            generateBtn.addEventListener('click', generateNumbers);
-            clearBtn.addEventListener('click', clearNumbers);
+
+            // Function untuk menyimpan input
+            function saveInput() {
+                allInputs.push(inputSequence);
+                
+                // Update statistics
+                updateDigitStats(inputSequence);
+                updateCombiStats(inputSequence);
+                
+                // Update UI
+                updateHistoryList();
+                updateChart();
+                updateCombiLists();
+                
+                // Reset input
+                inputSequence = '';
+                updateInputDisplay();
+            }
+
+            // Function untuk update statistik digit
+            function updateDigitStats(input) {
+                for (let i = 0; i < input.length; i++) {
+                    const digit = parseInt(input[i]);
+                    digitStats[digit]++;
+                }
+            }
+
+            // Function untuk update statistik kombinasi
+            function updateCombiStats(input) {
+                // Update 2-digit combinations
+                for (let i = 0; i < input.length - 1; i++) {
+                    const combi = input.substr(i, 2);
+                    combi2Stats[combi] = (combi2Stats[combi] || 0) + 1;
+                }
+                
+                // Combine current input with previous (if exists)
+                if (allInputs.length > 1) {
+                    const prevInput = allInputs[allInputs.length - 2];
+                    const combined = prevInput + input;
+                    
+                    // Update 4-digit combinations
+                    for (let i = 0; i < combined.length - 3; i++) {
+                        const combi = combined.substr(i, 4);
+                        combi4Stats[combi] = (combi4Stats[combi] || 0) + 1;
+                    }
+                    
+                    // Update 6-digit combinations if possible
+                    if (allInputs.length > 2) {
+                        const thirdLastInput = allInputs[allInputs.length - 3];
+                        const longCombined = thirdLastInput + prevInput + input;
+                        
+                        for (let i = 0; i < longCombined.length - 5; i++) {
+                            const combi = longCombined.substr(i, 6);
+                            combi6Stats[combi] = (combi6Stats[combi] || 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            // Function untuk update daftar riwayat
+            function updateHistoryList() {
+                historyList.innerHTML = '';
+                
+                // Tampilkan 10 input terakhir saja
+                const recentInputs = allInputs.slice(-10).reverse();
+                
+                recentInputs.forEach((input, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'combination-item';
+                    item.innerHTML = `
+                        <span>${input}</span>
+                        <span class="freq-indicator">#${allInputs.length - index}</span>
+                    `;
+                    historyList.appendChild(item);
+                });
+            }
+
+            // Function untuk update chart
+            function updateChart() {
+                digitChart.data.datasets[0].data = [
+                    digitStats[1], digitStats[2], digitStats[3],
+                    digitStats[4], digitStats[5], digitStats[6],
+                    digitStats[7], digitStats[8], digitStats[9]
+                ];
+                digitChart.update();
+            }
+
+            // Function untuk update daftar kombinasi
+            function updateCombiLists() {
+                updateCombiList(combi2Stats, combi2List, 5);
+                updateCombiList(combi4Stats, combi4List, 5);
+                updateCombiList(combi6Stats, combi6List, 5);
+            }
+
+            // Function untuk update daftar kombinasi tertentu
+            function updateCombiList(stats, element, limit) {
+                element.innerHTML = '';
+                
+                // Sort kombinasi berdasarkan frekuensi
+                const sortedCombis = Object.entries(stats)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, limit);
+                
+                if (sortedCombis.length === 0) {
+                    element.innerHTML = '<p class="text-muted text-center">Belum ada data</p>';
+                    return;
+                }
+                
+                sortedCombis.forEach(([combi, freq]) => {
+                    const item = document.createElement('div');
+                    item.className = 'combination-item';
+                    item.innerHTML = `
+                        <span>${combi}</span>
+                        <span class="freq-indicator">${freq}x</span>
+                    `;
+                    element.appendChild(item);
+                });
+            }
+
+            // Function untuk generate prediksi
+            function generatePredictions() {
+                if (allInputs.length < 2) {
+                    alert('Diperlukan minimal 2 input untuk menghasilkan prediksi!');
+                    return;
+                }
+                
+                // Generate prediksi 2 digit
+                let pred2 = getTopCombination(combi2Stats, 2);
+                prediction2.textContent = pred2 || '--';
+                
+                // Generate prediksi 4 digit
+                let pred4 = getTopCombination(combi4Stats, 4);
+                prediction4.textContent = pred4 || '----';
+                
+                // Generate prediksi 6 digit
+                let pred6 = getTopCombination(combi6Stats, 6);
+                prediction6.textContent = pred6 || '------';
+            }
+
+            // Function untuk mendapatkan kombinasi teratas
+            function getTopCombination(stats, digits) {
+                const sortedCombis = Object.entries(stats)
+                    .filter(([combi, _]) => combi.length === digits)
+                    .sort((a, b) => b[1] - a[1]);
+                
+                if (sortedCombis.length === 0) return null;
+                
+                // Pilih dari 3 teratas secara random untuk variasi
+                const topIndex = Math.floor(Math.random() * Math.min(3, sortedCombis.length));
+                return sortedCombis[topIndex][0];
+            }
+
+            // Initialize display
+            updateInputDisplay();
         });
     </script>
 </body>
