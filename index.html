@@ -116,6 +116,33 @@
         .textarea-container {
             position: relative;
         }
+        
+        .length-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            margin: 3px;
+            border-radius: 20px;
+            background-color: #e9ecef;
+            color: var(--dark-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .length-badge:hover {
+            background-color: #dee2e6;
+        }
+        
+        .length-badge.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .settings-panel {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -142,6 +169,20 @@
                         <div class="form-text">Gunakan koma sebagai pemisah (contoh: 1,2,3) atau klik angka di atas</div>
                     </div>
                     
+                    <div class="settings-panel mb-4">
+                        <div class="mb-3">
+                            <label class="form-label">Panjang Kombinasi:</label>
+                            <div id="lengthSelector" class="d-flex flex-wrap">
+                                <!-- Opsi panjang kombinasi akan di-generate oleh JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="allowDuplicates" checked>
+                            <label class="form-check-label" for="allowDuplicates">Izinkan angka berulang dalam kombinasi</label>
+                        </div>
+                    </div>
+                    
                     <div class="d-grid gap-2">
                         <button class="btn btn-primary" id="generateBtn">
                             <i class="fas fa-cogs me-2"></i>Generate Kombinasi
@@ -153,12 +194,17 @@
                     <h3 class="mb-4">Hasil Kombinasi</h3>
                     
                     <div class="mb-3">
+                        <span class="fw-bold">Panjang Kombinasi:</span>
+                        <span class="ms-2" id="selectedLengthDisplay">7</span>
+                    </div>
+                    
+                    <div class="mb-3">
                         <span class="fw-bold">Total Kombinasi:</span>
                         <span class="counter ms-2" id="combinationCount">0</span>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="combinationResults" class="form-label">Semua Kombinasi (7 digit):</label>
+                        <label for="combinationResults" class="form-label">Semua Kombinasi:</label>
                         <div class="textarea-container">
                             <textarea class="form-control" id="combinationResults" rows="8" readonly></textarea>
                             <button class="copy-btn" id="copyBtn" title="Salin ke clipboard">
@@ -185,6 +231,17 @@
                 numberSelector.appendChild(badge);
             }
             
+            // Generate length options 2-8
+            const lengthSelector = document.getElementById('lengthSelector');
+            for (let i = 2; i <= 8; i++) {
+                const badge = document.createElement('span');
+                badge.className = i === 7 ? 'length-badge selected' : 'length-badge';
+                badge.textContent = i;
+                badge.dataset.length = i;
+                badge.addEventListener('click', toggleLengthSelection);
+                lengthSelector.appendChild(badge);
+            }
+            
             // Elements
             const selectedNumbersInput = document.getElementById('selectedNumbers');
             const clearBtn = document.getElementById('clearBtn');
@@ -193,6 +250,11 @@
             const combinationCount = document.getElementById('combinationCount');
             const combinationResults = document.getElementById('combinationResults');
             const copyBtn = document.getElementById('copyBtn');
+            const allowDuplicates = document.getElementById('allowDuplicates');
+            const selectedLengthDisplay = document.getElementById('selectedLengthDisplay');
+            
+            // Variables
+            let selectedLength = 7;
             
             // Event listeners
             selectedNumbersInput.addEventListener('input', updateSelectedBadges);
@@ -217,6 +279,19 @@
                 
                 selectedNumbersInput.value = currentNumbers.join(', ');
                 updateSelectedBadges();
+            }
+            
+            // Toggle length selection
+            function toggleLengthSelection(e) {
+                const length = parseInt(e.target.dataset.length);
+                selectedLength = length;
+                selectedLengthDisplay.textContent = length;
+                
+                // Update UI
+                document.querySelectorAll('.length-badge').forEach(badge => {
+                    badge.classList.remove('selected');
+                });
+                e.target.classList.add('selected');
             }
             
             // Update selected badges visual state
@@ -266,8 +341,10 @@
                 // Remove duplicates
                 numbers = [...new Set(numbers)];
                 
-                // Generate all possible 7-digit combinations
-                const combinations = generateAllCombinations(numbers, 7);
+                // Generate all possible combinations of selected length
+                const combinations = allowDuplicates.checked 
+                    ? generateCombinationsWithDuplicates(numbers, selectedLength)
+                    : generateCombinationsWithoutDuplicates(numbers, selectedLength);
                 
                 // Display results
                 combinationCount.textContent = combinations.length.toLocaleString();
@@ -275,24 +352,51 @@
                 resultsCard.style.display = 'block';
             }
             
-            // Generate all combinations of length k from array
-            function generateAllCombinations(arr, k) {
+            // Generate all combinations with duplicates (permutations with repetition)
+            function generateCombinationsWithDuplicates(arr, k) {
                 const result = [];
+                const n = arr.length;
                 
-                function backtrack(start, current) {
+                function backtrack(current) {
                     if (current.length === k) {
                         result.push([...current]);
                         return;
                     }
                     
-                    for (let i = 0; i < arr.length; i++) {
+                    for (let i = 0; i < n; i++) {
                         current.push(arr[i]);
-                        backtrack(i, current);
+                        backtrack(current);
                         current.pop();
                     }
                 }
                 
-                backtrack(0, []);
+                backtrack([]);
+                return result;
+            }
+            
+            // Generate all combinations without duplicates (permutations without repetition)
+            function generateCombinationsWithoutDuplicates(arr, k) {
+                const result = [];
+                const n = arr.length;
+                
+                function backtrack(current, used) {
+                    if (current.length === k) {
+                        result.push([...current]);
+                        return;
+                    }
+                    
+                    for (let i = 0; i < n; i++) {
+                        if (!used[i]) {
+                            used[i] = true;
+                            current.push(arr[i]);
+                            backtrack(current, used);
+                            current.pop();
+                            used[i] = false;
+                        }
+                    }
+                }
+                
+                backtrack([], {});
                 return result;
             }
             
