@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Number Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        
+        .description {
+            color: #555;
+            margin-bottom: 30px;
+        }
+        
+        .number-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+            position: relative;
+            height: 150px;
+            background-color: var(--light);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .number-cell {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .number-cell:last-child {
+            border-right: none;
+        }
+        
+        .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+            z-index: 2;
+        }
+        
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: var(--accent);
+            border-radius: 50%;
+            top: -20px;
+            z-index: 1;
+            opacity: 0;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .settings {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .setting-label {
+            font-weight: 500;
+            color: var(--secondary);
+        }
+        
+        .range-container {
+            flex: 1;
+            margin-left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 5px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+        
+        .value-display {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .number-container {
+                height: 100px;
+            }
+            
+            .number {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Generator Angka Acak</h1>
+        <p class="description">Angka Random dari 1 sampai 9</p>
+        
+        <div class="number-container" id="numberContainer">
+            <div class="number-cell">
+                <span class="number" id="num1">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num2">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num3">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num4">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num5">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num6">-</span>
+            </div>
+            <div class="number-cell">
+                <span class="number" id="num7">-</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="generateBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Acak Angka
+            </button>
+            <button id="clearBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18"></path>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Reset
+            </button>
+        </div>
+        
+        <div class="settings">
+            <div class="setting-row">
+                <span class="setting-label">Kecepatan Animasi:</span>
+                <div class="range-container">
+                    <input type="range" id="speedRange" min="0.5" max="3" step="0.1" value="1">
+                    <span class="value-display" id="speedValue">1x</span>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span class="setting-label">Jumlah Dot:</span>
+                <div class="range-container">
+                    <input type="range" id="dotsRange" min="3" max="20" step="1" value="8">
+                    <span class="value-display" id="dotsValue">8</span>
+                </div>
+            </div>
+        </div>
+        
+        <p class="footer">© 2025 Random Number Generator</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const numberContainer = document.getElementById('numberContainer');
+            const generateBtn = document.getElementById('generateBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const speedRange = document.getElementById('speedRange');
+            const speedValue = document.getElementById('speedValue');
+            const dotsRange = document.getElementById('dotsRange');
+            const dotsValue = document.getElementById('dotsValue');
+            const cells = document.querySelectorAll('.number-cell');
+            const numElements = Array.from({ length: 7 }, (_, i) => document.getElementById(`num${i+1}`));
+            
+            let isAnimating = false;
+            let animationSpeed = parseFloat(speedRange.value);
+            let dotsCount = parseInt(dotsRange.value);
+            
+            // Update displayed values
+            speedRange.addEventListener('input', function() {
+                animationSpeed = parseFloat(this.value);
+                speedValue.textContent = animationSpeed.toFixed(1) + 'x';
+            });
+            
+            dotsRange.addEventListener('input', function() {
+                dotsCount = parseInt(this.value);
+                dotsValue.textContent = dotsCount;
+            });
+            
+            // Generate random number between min and max (inclusive)
+            function getRandomNumber(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+            
+            // Clear all numbers
+            function clearNumbers() {
+                numElements.forEach(el => {
+                    el.textContent = '-';
+                    gsap.to(el, { opacity: 1, scale: 1, duration: 0.3 });
+                });
+            }
+            
+            // Create a dot element for the pachinko animation
+            function createDot(cellIndex) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                
+                // Random horizontal position within the cell
+                const cell = cells[cellIndex];
+                const xPos = Math.random() * 80 + 10; // 10% to 90% of the cell width
+                
+                dot.style.left = `${xPos}%`;
+                cell.appendChild(dot);
+                
+                return dot;
+            }
+            
+            // Animate a single dot with pachinko effect
+            function animateDot(cellIndex, callback) {
+                const dot = createDot(cellIndex);
+                const cell = cells[cellIndex];
+                const cellHeight = cell.offsetHeight;
+                
+                // Create a timeline for more complex animation
+                const tl = gsap.timeline({
+                    onComplete: () => {
+                        dot.remove();
+                        if (callback) callback();
+                    }
+                });
+                
+                // Random bouncing path
+                const control1 = { x: Math.random() * 30 - 15, y: cellHeight * 0.3 };
+                const control2 = { x: Math.random() * 30 - 15, y: cellHeight * 0.6 };
+                const end = { x: Math.random() * 20 - 10, y: cellHeight };
+                
+                // Add animation segments
+                tl.to(dot, { opacity: 1, duration: 0.1 })
+                  .to(dot, {
+                      motionPath: {
+                          path: [
+                              { x: 0, y: 0 },
+                              { x: control1.x, y: control1.y },
+                              { x: control2.x, y: control2.y },
+                              { x: end.x, y: end.y }
+                          ],
+                          curviness: 1.5
+                      },
+                      duration: 1 / animationSpeed,
+                      ease: "power1.inOut"
+                  })
+                  .to(dot, { opacity: 0, duration: 0.2 }, "-=0.2");
+                
+                return tl;
+            }
+            
+            // Generate all numbers with animation
+            function generateNumbers() {
+                if (isAnimating) return;
+                isAnimating = true;
+                
+                // Disable button during animation
+                generateBtn.disabled = true;
+                
+                // Clear previous numbers with fade out effect
+                numElements.forEach(el => {
+                    gsap.to(el, { opacity: 0, scale: 0.8, duration: 0.3 });
+                });
+                
+                // Create a master timeline
+                const masterTimeline = gsap.timeline({
+                    onComplete: () => {
+                        isAnimating = false;
+                        generateBtn.disabled = false;
+                    }
+                });
+                
+                // Generate random numbers for each cell
+                const newNumbers = Array.from({ length: 7 }, () => getRandomNumber(1, 9));
+                
+                // Animate each cell with multiple dots
+                cells.forEach((cell, index) => {
+                    // Staggered start for each cell
+                    const startDelay = index * 0.1;
+                    
+                    // Add cell animation to master timeline
+                    masterTimeline.add(() => {
+                        const cellTimeline = gsap.timeline();
+                        
+                        // Add multiple dots per cell with staggered timing
+                        for (let i = 0; i < dotsCount; i++) {
+                            const dotDelay = i * (0.6 / dotsCount);
+                            cellTimeline.add(animateDot(index), dotDelay);
+                        }
+                        
+                        // Reveal the number at the end
+                        cellTimeline.add(() => {
+                            numElements[index].textContent = newNumbers[index];
+                            gsap.fromTo(numElements[index], 
+                                { opacity: 0, scale: 1.5 },
+                                { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(1.7)" }
+                            );
+                        }, 0.6 / animationSpeed);
+                        
+                        return cellTimeline;
+                    }, startDelay);
+                });
+                
+                return masterTimeline;
+            }
+            
+            // Event listeners
+            generateBtn.addEventListener('click', generateNumbers);
+            clearBtn.addEventListener('click', clearNumbers);
+        });
+    </script>
+</body>
+</html>
