@@ -115,6 +115,7 @@
         
         .textarea-container {
             position: relative;
+            margin-bottom: 20px;
         }
         
         .length-badge {
@@ -167,6 +168,56 @@
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 8px;
+        }
+        
+        .split-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .split-controls input {
+            width: 80px;
+        }
+        
+        .split-results {
+            margin-top: 30px;
+        }
+        
+        .split-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        
+        .split-section h5 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .split-section h5 .badge {
+            margin-left: 10px;
+        }
+        
+        .copied-badge {
+            background-color: #28a745;
+            margin-left: 10px;
+            display: none;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+        
+        .split-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -253,7 +304,31 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <div class="split-controls">
+                        <label for="splitCount">Split menjadi:</label>
+                        <input type="number" id="splitCount" class="form-control" min="1" max="20" value="1">
+                        <button class="btn btn-sm btn-outline-primary" id="splitBtn">Split</button>
+                    </div>
+                    <div class="split-info" id="splitInfo">
+                        Hasil akan dibagi menjadi beberapa bagian untuk memudahkan penyalinan
+                    </div>
+                    
+                    <div class="split-results" id="splitResults">
+                        <!-- Hasil split akan muncul di sini -->
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container">
+        <div class="toast align-items-center text-white bg-warning" role="alert" aria-live="assertive" aria-atomic="true" id="copyToast">
+            <div class="d-flex">
+                <div class="toast-body">
+                    Bagian ini sudah pernah disalin. Yakin ingin menyalin lagi?
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     </div>
@@ -295,10 +370,17 @@
             const selectedLengthDisplay = document.getElementById('selectedLengthDisplay');
             const zeroWarning = document.getElementById('zeroWarning');
             const separatorOptions = document.getElementsByName('separator');
+            const splitCount = document.getElementById('splitCount');
+            const splitBtn = document.getElementById('splitBtn');
+            const splitResults = document.getElementById('splitResults');
+            const copyToast = new bootstrap.Toast(document.getElementById('copyToast'));
             
             // Variables
             let selectedLength = 7;
             let currentSeparator = ',';
+            let allCombinations = [];
+            let splitSections = [];
+            let copiedSections = new Set();
             
             // Event listeners
             selectedNumbersInput.addEventListener('input', function() {
@@ -308,6 +390,7 @@
             clearBtn.addEventListener('click', clearSelection);
             generateBtn.addEventListener('click', generateCombinations);
             copyBtn.addEventListener('click', copyToClipboard);
+            splitBtn.addEventListener('click', splitResultsHandler);
             
             // Separator change listener
             separatorOptions.forEach(option => {
@@ -315,6 +398,7 @@
                     if (this.checked) {
                         currentSeparator = this.value;
                         updateResultsDisplay();
+                        updateSplitResultsDisplay();
                     }
                 });
             });
@@ -378,6 +462,10 @@
                 updateSelectedBadges();
                 resultsCard.style.display = 'none';
                 zeroWarning.style.display = 'none';
+                allCombinations = [];
+                splitResults.innerHTML = '';
+                splitSections = [];
+                copiedSections.clear();
             }
             
             // Generate combinations
@@ -407,25 +495,118 @@
                 numbers = [...new Set(numbers)];
                 
                 // Generate all possible combinations of selected length
-                const combinations = allowDuplicates.checked 
+                allCombinations = allowDuplicates.checked 
                     ? generateCombinationsWithDuplicates(numbers, selectedLength)
                     : generateCombinationsWithoutDuplicates(numbers, selectedLength);
                 
                 // Display results
-                combinationCount.textContent = combinations.length.toLocaleString();
-                updateResultsDisplay(combinations);
+                combinationCount.textContent = allCombinations.length.toLocaleString();
+                updateResultsDisplay();
                 resultsCard.style.display = 'block';
+                
+                // Reset split results
+                splitResults.innerHTML = '';
+                splitSections = [];
+                copiedSections.clear();
+                splitCount.value = 1;
             }
             
             // Update results display with current separator
-            function updateResultsDisplay(combinations = null) {
-                if (!combinations && combinationResults.value) {
-                    // If just changing separator, reformat existing results
-                    const currentResults = combinationResults.value.split(currentSeparator === ',' ? /,\s*/ : currentSeparator);
-                    combinationResults.value = currentResults.join(currentSeparator);
-                } else if (combinations) {
-                    // If generating new results
-                    combinationResults.value = combinations.map(comb => comb.join('')).join(currentSeparator);
+            function updateResultsDisplay() {
+                if (allCombinations.length > 0) {
+                    combinationResults.value = allCombinations.map(comb => comb.join('')).join(currentSeparator);
+                }
+            }
+            
+            // Split results handler
+            function splitResultsHandler() {
+                if (allCombinations.length === 0) {
+                    alert('Silakan generate kombinasi terlebih dahulu');
+                    return;
+                }
+                
+                const count = parseInt(splitCount.value);
+                if (isNaN(count) || count < 1 || count > 20) {
+                    alert('Jumlah split harus antara 1-20');
+                    return;
+                }
+                
+                splitResults.innerHTML = '';
+                splitSections = [];
+                copiedSections.clear();
+                
+                const chunkSize = Math.ceil(allCombinations.length / count);
+                
+                for (let i = 0; i < count; i++) {
+                    const start = i * chunkSize;
+                    const end = start + chunkSize;
+                    const chunk = allCombinations.slice(start, end);
+                    
+                    const sectionId = `split-${i}`;
+                    const section = document.createElement('div');
+                    section.className = 'split-section';
+                    section.innerHTML = `
+                        <h5>Bagian ${i+1} <span class="badge copied-badge" id="copied-badge-${i}"><i class="fas fa-check"></i> Tersalin</span></h5>
+                        <div class="textarea-container">
+                            <textarea class="form-control split-textarea" id="${sectionId}" rows="4" readonly></textarea>
+                            <button class="copy-btn split-copy-btn" data-section="${i}" title="Salin ke clipboard">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="split-info">Kombinasi ${start+1}-${Math.min(end, allCombinations.length)} dari ${allCombinations.length}</div>
+                    `;
+                    
+                    splitResults.appendChild(section);
+                    splitSections.push(chunk);
+                    
+                    // Update the textarea content
+                    document.getElementById(sectionId).value = chunk.map(comb => comb.join('')).join(currentSeparator);
+                }
+                
+                // Add event listeners to new copy buttons
+                document.querySelectorAll('.split-copy-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const sectionIndex = parseInt(this.dataset.section);
+                        copySplitSection(sectionIndex);
+                    });
+                });
+            }
+            
+            // Update split results display when separator changes
+            function updateSplitResultsDisplay() {
+                splitSections.forEach((section, index) => {
+                    const sectionId = `split-${index}`;
+                    const textarea = document.getElementById(sectionId);
+                    if (textarea) {
+                        textarea.value = section.map(comb => comb.join('')).join(currentSeparator);
+                    }
+                });
+            }
+            
+            // Copy split section to clipboard
+            function copySplitSection(sectionIndex) {
+                const textarea = document.getElementById(`split-${sectionIndex}`);
+                const copiedBadge = document.getElementById(`copied-badge-${sectionIndex}`);
+                
+                if (copiedSections.has(sectionIndex)) {
+                    // Show confirmation toast
+                    copyToast.show();
+                    
+                    // Set up confirmation handler
+                    const confirmHandler = () => {
+                        textarea.select();
+                        document.execCommand('copy');
+                        copiedBadge.style.display = 'inline-block';
+                        copyToast.hide();
+                        document.querySelector('.btn-close').removeEventListener('click', confirmHandler);
+                    };
+                    
+                    document.querySelector('.btn-close').addEventListener('click', confirmHandler);
+                } else {
+                    textarea.select();
+                    document.execCommand('copy');
+                    copiedBadge.style.display = 'inline-block';
+                    copiedSections.add(sectionIndex);
                 }
             }
             
