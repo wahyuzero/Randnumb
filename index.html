@@ -143,6 +143,13 @@
             padding: 15px;
             margin-bottom: 20px;
         }
+        
+        .zero-warning {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -151,11 +158,11 @@
             <div class="col-lg-8">
                 <div class="card p-4 mb-4">
                     <h2 class="text-center mb-4">Kombinasi Angka Generator</h2>
-                    <p class="text-center text-muted mb-4">Pilih angka 1-9 (maksimal 7 angka) untuk menghasilkan semua kemungkinan kombinasi</p>
+                    <p class="text-center text-muted mb-4">Pilih angka 0-9 (maksimal 10 angka) untuk menghasilkan semua kemungkinan kombinasi</p>
                     
                     <div class="text-center mb-4">
                         <div id="numberSelector" class="d-flex flex-wrap justify-content-center">
-                            <!-- Angka 1-9 akan di-generate oleh JavaScript -->
+                            <!-- Angka 0-9 akan di-generate oleh JavaScript -->
                         </div>
                     </div>
                     
@@ -163,10 +170,13 @@
                         <label for="selectedNumbers" class="form-label">Angka yang dipilih:</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-list-ol"></i></span>
-                            <input type="text" class="form-control" id="selectedNumbers" placeholder="Pilih angka di atas atau ketik manual (contoh: 1,2,3)" maxlength="13">
+                            <input type="text" class="form-control" id="selectedNumbers" placeholder="Pilih angka di atas atau ketik manual (contoh: 0,1,2)" maxlength="28">
                             <button class="btn btn-outline-secondary" type="button" id="clearBtn"><i class="fas fa-times"></i> Hapus</button>
                         </div>
-                        <div class="form-text">Gunakan koma sebagai pemisah (contoh: 1,2,3) atau klik angka di atas</div>
+                        <div class="form-text">Gunakan koma sebagai pemisah (contoh: 0,1,2) atau klik angka di atas</div>
+                        <div class="zero-warning" id="zeroWarning">
+                            <i class="fas fa-exclamation-circle me-1"></i>Angka 0 di depan mungkin tidak ditampilkan di beberapa aplikasi
+                        </div>
                     </div>
                     
                     <div class="settings-panel mb-4">
@@ -220,9 +230,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Generate number badges 1-9
+            // Generate number badges 0-9
             const numberSelector = document.getElementById('numberSelector');
-            for (let i = 1; i <= 9; i++) {
+            for (let i = 0; i <= 9; i++) {
                 const badge = document.createElement('div');
                 badge.className = 'number-badge';
                 badge.textContent = i;
@@ -252,15 +262,25 @@
             const copyBtn = document.getElementById('copyBtn');
             const allowDuplicates = document.getElementById('allowDuplicates');
             const selectedLengthDisplay = document.getElementById('selectedLengthDisplay');
+            const zeroWarning = document.getElementById('zeroWarning');
             
             // Variables
             let selectedLength = 7;
             
             // Event listeners
-            selectedNumbersInput.addEventListener('input', updateSelectedBadges);
+            selectedNumbersInput.addEventListener('input', function() {
+                updateSelectedBadges();
+                checkForZero();
+            });
             clearBtn.addEventListener('click', clearSelection);
             generateBtn.addEventListener('click', generateCombinations);
             copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Check if zero is selected
+            function checkForZero() {
+                const currentNumbers = selectedNumbersInput.value ? selectedNumbersInput.value.split(',').map(n => n.trim()) : [];
+                zeroWarning.style.display = currentNumbers.includes('0') ? 'block' : 'none';
+            }
             
             // Toggle number selection
             function toggleNumberSelection(e) {
@@ -270,8 +290,8 @@
                 if (currentNumbers.includes(number)) {
                     currentNumbers = currentNumbers.filter(n => n !== number);
                 } else {
-                    if (currentNumbers.length >= 7) {
-                        alert('Maksimal 7 angka yang dapat dipilih');
+                    if (currentNumbers.length >= 10) {
+                        alert('Maksimal 10 angka yang dapat dipilih');
                         return;
                     }
                     currentNumbers.push(number);
@@ -279,6 +299,7 @@
                 
                 selectedNumbersInput.value = currentNumbers.join(', ');
                 updateSelectedBadges();
+                checkForZero();
             }
             
             // Toggle length selection
@@ -313,6 +334,7 @@
                 selectedNumbersInput.value = '';
                 updateSelectedBadges();
                 resultsCard.style.display = 'none';
+                zeroWarning.style.display = 'none';
             }
             
             // Generate combinations
@@ -326,14 +348,14 @@
                 let numbers = input.split(',').map(n => n.trim()).filter(n => n);
                 
                 // Validate input
-                if (numbers.length > 7) {
-                    alert('Maksimal 7 angka yang dapat dipilih');
+                if (numbers.length > 10) {
+                    alert('Maksimal 10 angka yang dapat dipilih');
                     return;
                 }
                 
                 for (const num of numbers) {
-                    if (!/^[1-9]$/.test(num)) {
-                        alert(`Angka tidak valid: ${num}. Hanya angka 1-9 yang diperbolehkan.`);
+                    if (!/^[0-9]$/.test(num)) {
+                        alert(`Angka tidak valid: ${num}. Hanya angka 0-9 yang diperbolehkan.`);
                         return;
                     }
                 }
