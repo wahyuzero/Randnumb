@@ -219,6 +219,27 @@
             color: #6c757d;
             margin-top: 5px;
         }
+        
+        .random-options {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .random-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .random-option input {
+            margin-right: 8px;
+        }
+        
+        .random-option label {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -260,6 +281,22 @@
                             <input class="form-check-input" type="checkbox" id="allowDuplicates" checked>
                             <label class="form-check-label" for="allowDuplicates">Izinkan angka berulang dalam kombinasi</label>
                         </div>
+                        
+                        <div class="random-options">
+                            <div class="form-label mb-2">Opsi Pengacakan:</div>
+                            <div class="random-option">
+                                <input type="radio" id="noRandom" name="randomOption" value="none" checked>
+                                <label for="noRandom">Tidak diacak (urutan normal)</label>
+                            </div>
+                            <div class="random-option">
+                                <input type="radio" id="random" name="randomOption" value="random">
+                                <label for="random">Acak (urutan tidak beraturan)</label>
+                            </div>
+                            <div class="random-option">
+                                <input type="radio" id="extremeRandom" name="randomOption" value="extreme">
+                                <label for="extremeRandom">Acak Extreme (sangat tidak beraturan)</label>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="d-grid gap-2">
@@ -280,6 +317,11 @@
                     <div class="mb-3">
                         <span class="fw-bold">Total Kombinasi:</span>
                         <span class="counter ms-2" id="combinationCount">0</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="fw-bold">Mode Pengacakan:</span>
+                        <span class="ms-2" id="randomModeDisplay">Tidak diacak</span>
                     </div>
                     
                     <div class="separator-options">
@@ -373,6 +415,8 @@
             const splitCount = document.getElementById('splitCount');
             const splitBtn = document.getElementById('splitBtn');
             const splitResults = document.getElementById('splitResults');
+            const randomOptions = document.getElementsByName('randomOption');
+            const randomModeDisplay = document.getElementById('randomModeDisplay');
             const copyToast = new bootstrap.Toast(document.getElementById('copyToast'));
             
             // Variables
@@ -381,6 +425,7 @@
             let allCombinations = [];
             let splitSections = [];
             let copiedSections = new Set();
+            let randomMode = 'none';
             
             // Event listeners
             selectedNumbersInput.addEventListener('input', function() {
@@ -392,6 +437,14 @@
             copyBtn.addEventListener('click', copyToClipboard);
             splitBtn.addEventListener('click', splitResultsHandler);
             
+            // Random option change listener
+            randomOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    randomMode = this.value;
+                    updateRandomModeDisplay();
+                });
+            });
+            
             // Separator change listener
             separatorOptions.forEach(option => {
                 option.addEventListener('change', function() {
@@ -402,6 +455,23 @@
                     }
                 });
             });
+            
+            // Update random mode display
+            function updateRandomModeDisplay() {
+                let displayText = '';
+                switch(randomMode) {
+                    case 'none':
+                        displayText = 'Tidak diacak';
+                        break;
+                    case 'random':
+                        displayText = 'Acak';
+                        break;
+                    case 'extreme':
+                        displayText = 'Acak Extreme';
+                        break;
+                }
+                randomModeDisplay.textContent = displayText;
+            }
             
             // Check if zero is selected
             function checkForZero() {
@@ -495,20 +565,64 @@
                 numbers = [...new Set(numbers)];
                 
                 // Generate all possible combinations of selected length
-                allCombinations = allowDuplicates.checked 
+                let combinations = allowDuplicates.checked 
                     ? generateCombinationsWithDuplicates(numbers, selectedLength)
                     : generateCombinationsWithoutDuplicates(numbers, selectedLength);
+                
+                // Apply random mode
+                combinations = applyRandomMode(combinations);
+                
+                allCombinations = combinations;
                 
                 // Display results
                 combinationCount.textContent = allCombinations.length.toLocaleString();
                 updateResultsDisplay();
                 resultsCard.style.display = 'block';
+                updateRandomModeDisplay();
                 
                 // Reset split results
                 splitResults.innerHTML = '';
                 splitSections = [];
                 copiedSections.clear();
                 splitCount.value = 1;
+            }
+            
+            // Apply random mode to combinations
+            function applyRandomMode(combinations) {
+                switch(randomMode) {
+                    case 'random':
+                        return shuffleArray(combinations);
+                    case 'extreme':
+                        return extremeShuffle(combinations);
+                    default:
+                        return combinations;
+                }
+            }
+            
+            // Basic shuffle (Fisher-Yates algorithm)
+            function shuffleArray(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+            
+            // Extreme shuffle - shuffle multiple times and shuffle individual combinations
+            function extremeShuffle(array) {
+                // Shuffle the array multiple times
+                let shuffled = [...array];
+                for (let i = 0; i < 5; i++) {
+                    shuffled = shuffleArray(shuffled);
+                }
+                
+                // Shuffle the digits within each combination (if not allowing duplicates)
+                if (!allowDuplicates.checked) {
+                    return shuffled.map(comb => shuffleArray([...comb]));
+                }
+                
+                return shuffled;
             }
             
             // Update results display with current separator
