@@ -150,6 +150,24 @@
             margin-top: 5px;
             display: none;
         }
+        
+        .separator-option {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .separator-option input {
+            margin-right: 5px;
+        }
+        
+        .separator-options {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -213,7 +231,20 @@
                         <span class="counter ms-2" id="combinationCount">0</span>
                     </div>
                     
-                    <div class="mb-3">
+                    <div class="separator-options">
+                        <div class="form-label mb-2">Pilih Pemisah:</div>
+                        <label class="separator-option">
+                            <input type="radio" name="separator" value="," checked> Koma (,)
+                        </label>
+                        <label class="separator-option">
+                            <input type="radio" name="separator" value="*"> Bintang (*)
+                        </label>
+                        <label class="separator-option">
+                            <input type="radio" name="separator" value="#"> Tanda Pagar (#)
+                        </label>
+                    </div>
+                    
+                    <div class="mb-3 mt-3">
                         <label for="combinationResults" class="form-label">Semua Kombinasi:</label>
                         <div class="textarea-container">
                             <textarea class="form-control" id="combinationResults" rows="8" readonly></textarea>
@@ -263,9 +294,11 @@
             const allowDuplicates = document.getElementById('allowDuplicates');
             const selectedLengthDisplay = document.getElementById('selectedLengthDisplay');
             const zeroWarning = document.getElementById('zeroWarning');
+            const separatorOptions = document.getElementsByName('separator');
             
             // Variables
             let selectedLength = 7;
+            let currentSeparator = ',';
             
             // Event listeners
             selectedNumbersInput.addEventListener('input', function() {
@@ -275,6 +308,16 @@
             clearBtn.addEventListener('click', clearSelection);
             generateBtn.addEventListener('click', generateCombinations);
             copyBtn.addEventListener('click', copyToClipboard);
+            
+            // Separator change listener
+            separatorOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    if (this.checked) {
+                        currentSeparator = this.value;
+                        updateResultsDisplay();
+                    }
+                });
+            });
             
             // Check if zero is selected
             function checkForZero() {
@@ -370,8 +413,20 @@
                 
                 // Display results
                 combinationCount.textContent = combinations.length.toLocaleString();
-                combinationResults.value = combinations.map(comb => comb.join('')).join(', ');
+                updateResultsDisplay(combinations);
                 resultsCard.style.display = 'block';
+            }
+            
+            // Update results display with current separator
+            function updateResultsDisplay(combinations = null) {
+                if (!combinations && combinationResults.value) {
+                    // If just changing separator, reformat existing results
+                    const currentResults = combinationResults.value.split(currentSeparator === ',' ? /,\s*/ : currentSeparator);
+                    combinationResults.value = currentResults.join(currentSeparator);
+                } else if (combinations) {
+                    // If generating new results
+                    combinationResults.value = combinations.map(comb => comb.join('')).join(currentSeparator);
+                }
             }
             
             // Generate all combinations with duplicates (permutations with repetition)
